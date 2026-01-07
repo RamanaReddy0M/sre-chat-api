@@ -58,6 +58,8 @@ The application uses Server-Sent Events (SSE) for real-time message broadcasting
 - ✅ Health check endpoint
 - ✅ Unit tests for all endpoints
 - ✅ Postman collection included
+- ✅ Dockerized with multi-stage Dockerfile
+- ✅ Optimized Docker image size (~65MB)
 
 ## Prerequisites
 
@@ -120,6 +122,86 @@ make run
 ```
 
 The server starts on `http://localhost:8080`. Migrations run automatically on startup.
+
+## Docker
+
+The application can be run using Docker with a multi-stage Dockerfile for optimal image size.
+
+### Build Docker Image
+
+```bash
+# Build with version tag (semver)
+VERSION=1.0.0 make docker-build
+
+# Or manually
+docker build -t sre-chat-api:1.0.0 .
+```
+
+### Run Docker Container
+
+```bash
+# Run with environment variables
+VERSION=1.0.0 make docker-run
+
+# Or manually with custom environment variables
+docker run --rm -it \
+  -p 8080:8080 \
+  -e DB_HOST=host.docker.internal \
+  -e DB_PORT=5432 \
+  -e DB_USER=postgres \
+  -e DB_PASSWORD=postgres \
+  -e DB_NAME=chat_db \
+  -e MIGRATION_ENABLED=true \
+  sre-chat-api:1.0.0
+```
+
+### Docker with Docker Compose
+
+```bash
+# Start PostgreSQL
+make docker-up
+
+# Run API container (connects to PostgreSQL)
+VERSION=1.0.0 make docker-run-detached
+
+# View logs
+make docker-logs-api
+
+# Stop container
+make docker-stop
+```
+
+**Note:** When running in Docker, use `host.docker.internal` (Mac/Windows) or your host IP (Linux) for `DB_HOST` to connect to PostgreSQL running on the host machine.
+
+### Docker Image Details
+
+- **Multi-stage build**: Separate build and runtime stages for optimal image size
+- **Image size**: ~65MB (Alpine-based, statically compiled binary)
+- **Security**: Runs as non-root user (`appuser`)
+- **Health check**: Built-in health check endpoint monitoring
+- **Semver tagging**: Uses semantic versioning (e.g., `1.0.0`, `1.0`, `1`) instead of `latest`
+
+### Available Make Targets
+
+```bash
+# Build Docker image
+VERSION=1.0.0 make docker-build
+
+# Run container interactively
+VERSION=1.0.0 make docker-run
+
+# Run container in background
+VERSION=1.0.0 make docker-run-detached
+
+# View container logs
+make docker-logs-api
+
+# Stop container
+make docker-stop
+
+# Push to registry (set REGISTRY variable)
+REGISTRY=ghcr.io/username VERSION=1.0.0 make docker-push
+```
 
 ## API Endpoints
 
