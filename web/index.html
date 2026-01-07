@@ -1340,11 +1340,30 @@
             };
 
             try {
-                // Try multiple proxy services
+                // Try fetching with retry logic (up to 2 retries)
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                let lastError = null;
+                let response = null;
                 
-                const response = await fetchWithTimeout(proxyUrl, 4000);
-                if (!response.ok) throw new Error('Failed to fetch');
+                // Retry up to 2 times
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        response = await fetchWithTimeout(proxyUrl, 10000); // Increased to 10 seconds
+                        if (response.ok) break;
+                        lastError = new Error(`HTTP ${response.status}`);
+                    } catch (err) {
+                        lastError = err;
+                        if (attempt < 2) {
+                            // Wait a bit before retrying
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            continue;
+                        }
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw lastError || new Error('Failed to fetch after retries');
+                }
                 
                 const data = await response.json();
                 const html = data.contents;

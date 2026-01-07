@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" style="background: #1a1a1a;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="bold">SSE Architecture - Real-time Message Broadcasting</text>
+  
+  <!-- Components -->
+  <!-- Web Client 1 -->
+  <rect x="50" y="80" width="120" height="80" rx="8" fill="#4a9eff" stroke="#5aaaff" stroke-width="2"/>
+  <text x="110" y="110" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Web Client 1</text>
+  <text x="110" y="130" text-anchor="middle" fill="#e0e0e0" font-size="11">Browser</text>
+  
+  <!-- Web Client 2 -->
+  <rect x="50" y="200" width="120" height="80" rx="8" fill="#4a9eff" stroke="#5aaaff" stroke-width="2"/>
+  <text x="110" y="230" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Web Client 2</text>
+  <text x="110" y="250" text-anchor="middle" fill="#e0e0e0" font-size="11">Browser</text>
+  
+  <!-- REST API Server -->
+  <rect x="300" y="140" width="150" height="80" rx="8" fill="#667eea" stroke="#764ba2" stroke-width="2"/>
+  <text x="375" y="170" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">REST API Server</text>
+  <text x="375" y="190" text-anchor="middle" fill="#e0e0e0" font-size="11">Gin Framework</text>
+  
+  <!-- PostgreSQL -->
+  <rect x="550" y="140" width="150" height="80" rx="8" fill="#336791" stroke="#4a7c9a" stroke-width="2"/>
+  <text x="625" y="170" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">PostgreSQL</text>
+  <text x="625" y="190" text-anchor="middle" fill="#e0e0e0" font-size="11">Database</text>
+  
+  <!-- SSE Handler -->
+  <rect x="300" y="320" width="150" height="80" rx="8" fill="#51cf66" stroke="#69db7c" stroke-width="2"/>
+  <text x="375" y="350" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">SSE Handler</text>
+  <text x="375" y="370" text-anchor="middle" fill="#e0e0e0" font-size="11">Broadcast Manager</text>
+  
+  <!-- Connection arrows -->
+  <!-- Client 1 to API (SSE connection) -->
+  <path d="M 110 120 L 300 180" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#arrowhead-blue)"/>
+  <text x="200" y="140" text-anchor="middle" fill="#4a9eff" font-size="10">GET /api/v1/messages/stream</text>
+  
+  <!-- Client 2 to API (SSE connection) -->
+  <path d="M 110 240 L 300 200" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#arrowhead-blue)"/>
+  <text x="200" y="220" text-anchor="middle" fill="#4a9eff" font-size="10">GET /api/v1/messages/stream</text>
+  
+  <!-- API to SSE Handler (registration) -->
+  <path d="M 375 220 L 375 320" stroke="#667eea" stroke-width="2" fill="none" marker-end="url(#arrowhead-purple)"/>
+  <text x="390" y="270" text-anchor="middle" fill="#667eea" font-size="10">Register client</text>
+  
+  <!-- SSE Handler to Client 1 (keep-alive) -->
+  <path d="M 300 360 L 110 160" stroke="#51cf66" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-green)"/>
+  <text x="180" y="260" text-anchor="middle" fill="#51cf66" font-size="10">SSE Connection</text>
+  
+  <!-- SSE Handler to Client 2 (keep-alive) -->
+  <path d="M 300 360 L 110 280" stroke="#51cf66" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-green)"/>
+  
+  <!-- Client 1 to API (POST message) -->
+  <path d="M 170 120 L 300 180" stroke="#ffd43b" stroke-width="2" fill="none" marker-end="url(#arrowhead-yellow)"/>
+  <text x="220" y="130" text-anchor="middle" fill="#ffd43b" font-size="10">POST /api/v1/messages</text>
+  
+  <!-- API to Database -->
+  <path d="M 450 180 L 550 180" stroke="#336791" stroke-width="2" fill="none" marker-end="url(#arrowhead-db)"/>
+  <text x="500" y="170" text-anchor="middle" fill="#336791" font-size="10">Save message</text>
+  
+  <!-- Database to API -->
+  <path d="M 550 180 L 450 180" stroke="#336791" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead-db)"/>
+  <text x="500" y="195" text-anchor="middle" fill="#336791" font-size="10">Message saved</text>
+  
+  <!-- API to SSE Handler (notify) -->
+  <path d="M 375 220 L 375 320" stroke="#ffd43b" stroke-width="2" fill="none" marker-end="url(#arrowhead-yellow)"/>
+  <text x="390" y="270" text-anchor="middle" fill="#ffd43b" font-size="10">NotifyNewMessage()</text>
+  
+  <!-- SSE Handler to Client 1 (broadcast) -->
+  <path d="M 300 360 L 110 160" stroke="#51cf66" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)"/>
+  <text x="180" y="250" text-anchor="middle" fill="#51cf66" font-size="10" font-weight="bold">SSE Event (new message)</text>
+  
+  <!-- SSE Handler to Client 2 (broadcast) -->
+  <path d="M 300 360 L 110 280" stroke="#51cf66" stroke-width="3" fill="none" marker-end="url(#arrowhead-green)"/>
+  
+  <!-- Legend -->
+  <rect x="50" y="450" width="700" height="130" rx="8" fill="#2a2a2a" stroke="#333" stroke-width="1"/>
+  <text x="400" y="475" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">Flow Description</text>
+  
+  <text x="70" y="500" fill="#4a9eff" font-size="11">1. Clients connect to SSE endpoint</text>
+  <text x="70" y="520" fill="#667eea" font-size="11">2. API registers clients with SSE Handler</text>
+  <text x="70" y="540" fill="#ffd43b" font-size="11">3. Client posts message → API saves to DB</text>
+  <text x="70" y="560" fill="#51cf66" font-size="11">4. SSE Handler broadcasts to all connected clients</text>
+  
+  <text x="400" y="500" fill="#e0e0e0" font-size="11">• Real-time updates without polling</text>
+  <text x="400" y="520" fill="#e0e0e0" font-size="11">• SSE Handler maintains map of client channels</text>
+  <text x="400" y="540" fill="#e0e0e0" font-size="11">• Keep-alive pings every 30 seconds</text>
+  <text x="400" y="560" fill="#e0e0e0" font-size="11">• Automatic reconnection on disconnect</text>
+  
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4a9eff"/>
+    </marker>
+    <marker id="arrowhead-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#667eea"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#51cf66"/>
+    </marker>
+    <marker id="arrowhead-yellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#ffd43b"/>
+    </marker>
+    <marker id="arrowhead-db" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#336791"/>
+    </marker>
+  </defs>
+</svg>
+
