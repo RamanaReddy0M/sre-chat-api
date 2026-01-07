@@ -169,6 +169,8 @@ Starting server address=0.0.0.0:8080
 
 A beautiful web interface is included! No need for curl or Postman.
 
+![Chat Interface](chat-ui.png)
+
 ### Quick Start
 
 1. **Start the API:**
