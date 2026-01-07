@@ -1,0 +1,37 @@
+# Binaries
+bin/
+api
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Generated proto files
+proto/*.pb.go
+
+# Test binary
+*.test
+
+# Output of the coverage tool
+*.out
+coverage.html
+
+# Environment variables
+.env
+.env.local
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

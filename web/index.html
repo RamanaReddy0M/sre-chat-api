@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRE Bootcamp Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e0e0e0;
+        }
+
+        .container {
+            background: #1a1a1a;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            width: 90%;
+            max-width: 900px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .join-screen {
+            padding: 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: #1a1a1a;
+        }
+
+        .join-screen h1 {
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .join-screen p {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .join-form {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #252525;
+            color: #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: #2a2a2a;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+
+        .join-btn {
+            width: 100%;
+            padding: 14px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .join-btn:hover {
+            background: #5aaaff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .join-btn:active {
+            transform: translateY(0);
+        }
+
+        .chat-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-header {
+            background: #1f1f1f;
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .chat-header h2 {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-badge {
+            background: #2a2a2a;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            border: 1px solid #333;
+            color: #e0e0e0;
+        }
+
+        .leave-btn {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .leave-btn:hover {
+            background: #333;
+            border-color: #444;
+            color: #fff;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #151515;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s;
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .message.own {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            padding: 0 4px;
+        }
+
+        .message.own .message-header {
+            justify-content: flex-end;
+        }
+
+        .message.other .message-header {
+            justify-content: flex-start;
+        }
+
+        .message-user {
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #4a9eff;
+        }
+
+        .message.own .message-user {
+            display: none; /* Don't show username for own messages */
+        }
+
+        .message-time {
+            font-size: 0.75em;
+            color: #666;
+        }
+
+        .message-content {
+            background: #252525;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            word-wrap: break-word;
+            line-height: 1.5;
+            border: 1px solid #2a2a2a;
+        }
+
+        .message.own .message-content {
+            background: #4a9eff;
+            color: white;
+            border-bottom-right-radius: 4px;
+            border: 1px solid #5aaaff;
+        }
+
+        .message.other .message-content {
+            background: #252525;
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .link-preview {
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+            background: #1a1a1a;
+            max-width: 450px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .link-preview:hover {
+            border-color: #4a9eff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 158, 255, 0.2);
+        }
+
+        .link-preview-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            display: block;
+        }
+
+        .link-preview-content {
+            padding: 16px;
+            background: #1a1a1a;
+        }
+
+        .link-preview-title {
+            font-weight: 600;
+            font-size: 1em;
+            color: #ffffff;
+            margin-bottom: 8px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .link-preview-description {
+            font-size: 0.9em;
+            color: #b0b0b0;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .link-preview-url {
+            font-size: 0.8em;
+            color: #4a9eff;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .link-preview-url::before {
+            content: "🔗";
+            font-size: 0.9em;
+        }
+
+        .message.own .link-preview {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .message.own .link-preview-content {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .link-preview-loading {
+            padding: 24px;
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .link-preview-loading::before {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .link-preview-error {
+            padding: 16px;
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateY(-4px);
+        }
+
+        .message:hover .message-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message.own .message-actions {
+            justify-content: flex-end;
+        }
+
+        .message.other .message-actions {
+            justify-content: flex-start;
+        }
+
+        .message-btn {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #b0b0b0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .message.own .message-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message.other .message-btn {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            color: #888;
+        }
+
+        .message-btn:hover {
+            background: #333;
+            border-color: #444;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .message.other .message-btn:hover {
+            background: #333;
+            border-color: #444;
+            color: #fff;
+        }
+
+        .message-btn.edit-btn:hover {
+            background: #4a9eff;
+            border-color: #5aaaff;
+            color: white;
+        }
+
+        .message-btn.delete-btn:hover {
+            background: #dc3545;
+            border-color: #e04555;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .message-edit-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #4a9eff;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            min-height: 40px;
+            background: #252525;
+            color: #e0e0e0;
+        }
+
+        .message-edit-input:focus {
+            outline: none;
+            border-color: #5aaaff;
+            background: #2a2a2a;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+
+        .message-edit-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            justify-content: flex-end;
+        }
+
+        .message-edit-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .message-edit-btn.save {
+            background: #4a9eff;
+            color: white;
+        }
+
+        .message-edit-btn.save:hover {
+            background: #5aaaff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .message-edit-btn.cancel {
+            background: #2a2a2a;
+            color: #b0b0b0;
+            border: 1px solid #333;
+        }
+
+        .message-edit-btn.cancel:hover {
+            background: #333;
+            color: #fff;
+            border-color: #444;
+        }
+
+        .input-area {
+            padding: 20px 24px;
+            background: #1f1f1f;
+            border-top: 1px solid #2a2a2a;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: none;
+            background: #252525;
+            color: #e0e0e0;
+            transition: all 0.3s;
+            min-height: 50px;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background: #2a2a2a;
+            box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+        }
+
+        .send-btn {
+            padding: 0;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 50px;
+            height: 50px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .send-btn:hover {
+            background: #5aaaff;
+            transform: translateY(-1px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+
+        .send-btn:active {
+            transform: translateY(0) scale(1);
+        }
+
+        .status {
+            padding: 12px 20px;
+            background: #2a2a2a;
+            color: #888;
+            text-align: center;
+            font-size: 0.9em;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .status.error {
+            background: #2a1f1f;
+            color: #ff6b6b;
+            border-bottom-color: #3a2a2a;
+        }
+
+        .status.success {
+            background: #1f2a1f;
+            color: #51cf66;
+            border-bottom-color: #2a3a2a;
+        }
+
+        .status.reconnecting {
+            background: #2a2a1f;
+            color: #ffd43b;
+            border-bottom-color: #3a3a2a;
+        }
+
+        .reconnect-btn {
+            padding: 6px 12px;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reconnect-btn:hover {
+            background: #5aaaff;
+            transform: translateY(-1px);
+        }
+
+        .reconnect-btn:active {
+            transform: translateY(0);
+        }
+
+        .message-content a {
+            color: #5aaaff;
+            text-decoration: underline;
+            word-break: break-all;
+            transition: color 0.2s;
+        }
+
+        .message-content a:hover {
+            color: #6bb5ff;
+        }
+
+        .message.own .message-content a {
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: underline;
+        }
+
+        .message.own .message-content a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Join Screen -->
+        <div class="join-screen" id="joinScreen">
+            <h1>💬 SRE Bootcamp Chat</h1>
+            <p>Join the conversation and chat with everyone!</p>
+            <form class="join-form" id="joinForm">
+                <div class="input-group">
+                    <label for="username">Your Name</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Enter your name" 
+                        required 
+                        autofocus
+                        maxlength="50"
+                    >
+                </div>
+                <button type="submit" class="join-btn">Join Chat</button>
+            </form>
+        </div>
+
+        <!-- Chat Screen -->
+        <div class="chat-screen" id="chatScreen">
+            <div class="chat-header">
+                <h2>💬 SRE Bootcamp Chat</h2>
+                <div class="user-info">
+                    <span class="user-badge">👤 <span id="currentUser"></span></span>
+                    <button class="leave-btn" id="leaveBtn">Leave</button>
+                </div>
+            </div>
+            <div class="status" id="status"></div>
+            <div class="messages-container" id="messagesContainer">
+                <!-- Messages will be inserted here -->
+            </div>
+            <div class="input-area">
+                <textarea 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Type your message here..."
+                    rows="2"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" title="Send message">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+        let currentUser = '';
+        let lastMessageId = 0;
+        let eventSource = null;
+
+        // DOM Elements
+        const joinScreen = document.getElementById('joinScreen');
+        const chatScreen = document.getElementById('chatScreen');
+        const joinForm = document.getElementById('joinForm');
+        const usernameInput = document.getElementById('username');
+        const currentUserSpan = document.getElementById('currentUser');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const leaveBtn = document.getElementById('leaveBtn');
+        const statusDiv = document.getElementById('status');
+
+        // Join chat
+        joinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = usernameInput.value.trim();
+            
+            if (!username) {
+                showStatus('Please enter your name', 'error');
+                return;
+            }
+
+            currentUser = username;
+            currentUserSpan.textContent = currentUser;
+            
+            // Switch to chat screen
+            joinScreen.style.display = 'none';
+            chatScreen.style.display = 'flex';
+            
+            showStatus('Connected! Loading messages...', 'success');
+            
+            // Load existing messages
+            await loadMessages();
+            
+            // Start SSE connection for real-time updates
+            startSSE();
+            
+            // Focus on message input
+            messageInput.focus();
+        });
+
+        // Send message
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            
+            if (!content) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user: currentUser,
+                        content: content
+                    })
+                });
+
+                if (response.ok) {
+                    messageInput.value = '';
+                    // Reload messages to show the new one
+                    await loadMessages();
+                } else {
+                    const error = await response.json();
+                    showStatus(`Error: ${error.error || 'Failed to send message'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Send button click
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Enter key to send (Shift+Enter for new line)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Load messages
+        async function loadMessages() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load messages');
+                }
+
+                const messages = await response.json();
+                
+                // Clear container
+                messagesContainer.innerHTML = '';
+                
+                // Add messages
+                messages.forEach(message => {
+                    addMessageToUI(message);
+                    if (message.id > lastMessageId) {
+                        lastMessageId = message.id;
+                    }
+                });
+                
+                // Scroll to bottom
+                scrollToBottom();
+                
+                showStatus('', '');
+            } catch (error) {
+                showStatus(`Error loading messages: ${error.message}`, 'error');
+            }
+        }
+
+        // Add message to UI
+        function addMessageToUI(message) {
+            // Check if message already exists (to avoid duplicates)
+            const existingMessage = document.querySelector(`[data-message-id="${message.id}"]`);
+            if (existingMessage) {
+                // Update existing message
+                updateMessageInUI(message, existingMessage);
+                return;
+            }
+
+            const messageDiv = document.createElement('div');
+            const isOwn = message.user === currentUser;
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            messageDiv.setAttribute('data-message-id', message.id);
+            
+            const time = new Date(message.created_at).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // For own messages, show time first; for others, show user then time
+            if (isOwn) {
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content" data-content="${escapeHtml(message.content)}">${linkifyText(message.content)}</div>
+                    <div class="message-actions">
+                        <button class="message-btn delete-btn" onclick="deleteMessage(${message.id})">🗑️ Delete</button>
+                        <button class="message-btn edit-btn" onclick="editMessage(${message.id})">✎ Edit</button>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-user">${escapeHtml(message.user)}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content" data-content="${escapeHtml(message.content)}">${linkifyText(message.content)}</div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            
+            // Extract URLs and add link previews
+            extractAndShowLinkPreviews(message.content, messageDiv);
+        }
+
+        // Update existing message in UI
+        function updateMessageInUI(message, messageDiv) {
+            const isOwn = message.user === currentUser;
+            const time = new Date(message.created_at).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            if (isOwn) {
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content" data-content="${escapeHtml(message.content)}">${linkifyText(message.content)}</div>
+                    <div class="message-actions">
+                        <button class="message-btn delete-btn" onclick="deleteMessage(${message.id})">🗑️ Delete</button>
+                        <button class="message-btn edit-btn" onclick="editMessage(${message.id})">✎ Edit</button>
+                    </div>
+                `;
+                // Extract URLs and add link previews
+                setTimeout(() => extractAndShowLinkPreviews(message.content, messageDiv), 100);
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="message-user">${escapeHtml(message.user)}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content" data-content="${escapeHtml(message.content)}">${linkifyText(message.content)}</div>
+                `;
+                // Extract URLs and add link previews
+                setTimeout(() => extractAndShowLinkPreviews(message.content, messageDiv), 100);
+            }
+        }
+
+        // Edit message
+        function editMessage(messageId) {
+            const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!messageDiv) return;
+
+            const contentDiv = messageDiv.querySelector('.message-content');
+            const actionsDiv = messageDiv.querySelector('.message-actions');
+            const originalContent = contentDiv.getAttribute('data-content');
+            
+            // Store original HTML for cancel
+            contentDiv.setAttribute('data-original-html', contentDiv.innerHTML);
+            
+            // Hide action buttons while editing
+            if (actionsDiv) {
+                actionsDiv.style.display = 'none';
+            }
+            
+            // Replace content with edit input
+            contentDiv.innerHTML = `
+                <textarea class="message-edit-input" rows="2">${escapeHtml(originalContent)}</textarea>
+                <div class="message-edit-actions">
+                    <button class="message-edit-btn save" onclick="saveMessage(${messageId})">Save</button>
+                    <button class="message-edit-btn cancel" onclick="cancelEdit(${messageId})">Cancel</button>
+                </div>
+            `;
+
+            // Focus and select text
+            const textarea = contentDiv.querySelector('.message-edit-input');
+            textarea.focus();
+            textarea.select();
+
+            // Add keyboard shortcuts
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    saveMessage(messageId);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit(messageId);
+                }
+            });
+        }
+
+        // Save edited message
+        async function saveMessage(messageId) {
+            const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!messageDiv) return;
+
+            const textarea = messageDiv.querySelector('.message-edit-input');
+            const newContent = textarea.value.trim();
+
+            if (!newContent) {
+                showStatus('Message cannot be empty', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${messageId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: newContent
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedMessage = await response.json();
+                    // Update the message in UI directly
+                    updateMessageInUI(updatedMessage, messageDiv);
+                    showStatus('Message updated', 'success');
+                    setTimeout(() => showStatus('', ''), 2000);
+                } else {
+                    const error = await response.json();
+                    showStatus(`Error: ${error.error || 'Failed to update message'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Cancel edit
+        function cancelEdit(messageId) {
+            const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!messageDiv) return;
+
+            const contentDiv = messageDiv.querySelector('.message-content');
+            const actionsDiv = messageDiv.querySelector('.message-actions');
+            const originalHtml = contentDiv.getAttribute('data-original-html');
+            
+            // Restore original HTML
+            if (originalHtml) {
+                contentDiv.innerHTML = originalHtml;
+            }
+            
+            // Show action buttons again
+            if (actionsDiv) {
+                actionsDiv.style.display = 'flex';
+            }
+        }
+
+        // Delete message
+        async function deleteMessage(messageId) {
+            if (!confirm('Are you sure you want to delete this message?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${messageId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Remove message from UI
+                    const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+                    if (messageDiv) {
+                        messageDiv.style.transition = 'opacity 0.3s, transform 0.3s';
+                        messageDiv.style.opacity = '0';
+                        messageDiv.style.transform = 'translateX(20px)';
+                        setTimeout(() => {
+                            messageDiv.remove();
+                        }, 300);
+                    }
+                    showStatus('Message deleted', 'success');
+                    setTimeout(() => showStatus('', ''), 2000);
+                } else {
+                    const error = await response.json();
+                    showStatus(`Error: ${error.error || 'Failed to delete message'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Track connection state
+        let reconnectTimeout = null;
+        let connectionRetries = 0;
+        const MAX_RETRIES = 3;
+
+        // Start Server-Sent Events connection for real-time updates
+        function startSSE() {
+            // Close existing connection if any
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Clear any existing reconnect timeout
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+
+            // Reset retry count on manual reconnect
+            connectionRetries = 0;
+
+            // Create new EventSource connection
+            eventSource = new EventSource(`${API_BASE_URL}/messages/stream`);
+
+            // Handle incoming messages
+            eventSource.addEventListener('message', (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'message' && data.message) {
+                        const message = data.message;
+                        
+                        // Only add if it's a new message
+                        if (message.id > lastMessageId) {
+                            addMessageToUI(message);
+                            lastMessageId = message.id;
+                            scrollToBottom();
+                        }
+                    } else if (data.type === 'connected') {
+                        connectionRetries = 0;
+                        showStatus('Connected! Real-time updates active', 'success');
+                        setTimeout(() => showStatus('', ''), 2000);
+                    } else if (data.type === 'ping') {
+                        // Keepalive ping, reset retry count
+                        connectionRetries = 0;
+                    }
+                } catch (error) {
+                    console.error('Error parsing SSE message:', error);
+                }
+            });
+
+            // Handle connection errors
+            eventSource.addEventListener('error', (event) => {
+                console.error('SSE connection error:', event);
+                
+                // Check if connection is closed
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    connectionRetries++;
+                    
+                    if (connectionRetries >= MAX_RETRIES) {
+                        // Show reconnect button after max retries
+                        showStatus('Connection lost. Unable to reconnect automatically.', 'reconnecting', true);
+                        eventSource.close();
+                        eventSource = null;
+                    } else {
+                        // Show reconnecting status
+                        showStatus('Reconnecting...', 'reconnecting');
+                    }
+                } else if (eventSource.readyState === EventSource.CONNECTING) {
+                    // Still trying to connect
+                    showStatus('Reconnecting...', 'reconnecting');
+                }
+            });
+
+            // Handle connection open
+            eventSource.onopen = () => {
+                console.log('SSE connection opened');
+                connectionRetries = 0;
+                showStatus('Connected! Real-time updates active', 'success');
+                setTimeout(() => showStatus('', ''), 2000);
+            };
+        }
+
+        // Manual reconnect function
+        function reconnectSSE() {
+            showStatus('Reconnecting...', 'reconnecting');
+            connectionRetries = 0;
+            startSSE();
+        }
+
+        // Stop SSE connection
+        function stopSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        // Scroll to bottom
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Leave chat
+        leaveBtn.addEventListener('click', () => {
+            stopSSE();
+            currentUser = '';
+            lastMessageId = 0;
+            messagesContainer.innerHTML = '';
+            messageInput.value = '';
+            usernameInput.value = '';
+            
+            chatScreen.style.display = 'none';
+            joinScreen.style.display = 'flex';
+            showStatus('', '');
+            usernameInput.focus();
+        });
+
+        // Show status message
+        function showStatus(message, type, showReconnect = false) {
+            if (!message) {
+                statusDiv.style.display = 'none';
+                statusDiv.innerHTML = '';
+                return;
+            }
+            
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'flex';
+            
+            if (showReconnect) {
+                statusDiv.innerHTML = `
+                    <span>${message}</span>
+                    <button class="reconnect-btn" onclick="reconnectSSE()">Reconnect</button>
+                `;
+            } else {
+                statusDiv.textContent = message;
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Convert text to HTML with clickable links, emails, and phone numbers
+        function linkifyText(text) {
+            // First escape HTML to prevent XSS
+            let html = escapeHtml(text);
+            
+            // Helper function to check if a position is inside an <a> tag
+            function isInsideLink(html, position) {
+                const before = html.substring(0, position);
+                const openTags = (before.match(/<a\s[^>]*>/gi) || []).length;
+                const closeTags = (before.match(/<\/a>/gi) || []).length;
+                return openTags > closeTags;
+            }
+            
+            // Pattern for URLs (http://, https://, or www.)
+            // Process URLs first as they're most specific
+            const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+            let urlMatches = [];
+            let match;
+            while ((match = urlPattern.exec(html)) !== null) {
+                if (!isInsideLink(html, match.index)) {
+                    urlMatches.push({
+                        index: match.index,
+                        text: match[0],
+                        href: match[0].toLowerCase().startsWith('www.') ? 'http://' + match[0] : match[0]
+                    });
+                }
+            }
+            
+            // Replace URLs (from end to start to preserve indices)
+            for (let i = urlMatches.length - 1; i >= 0; i--) {
+                const m = urlMatches[i];
+                const link = `<a href="${escapeHtml(m.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(m.text)}</a>`;
+                html = html.substring(0, m.index) + link + html.substring(m.index + m.text.length);
+            }
+            
+            // Pattern for email addresses
+            const emailPattern = /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/gi;
+            let emailMatches = [];
+            while ((match = emailPattern.exec(html)) !== null) {
+                if (!isInsideLink(html, match.index)) {
+                    emailMatches.push({
+                        index: match.index,
+                        text: match[0]
+                    });
+                }
+            }
+            
+            // Replace emails (from end to start)
+            for (let i = emailMatches.length - 1; i >= 0; i--) {
+                const m = emailMatches[i];
+                const link = `<a href="mailto:${escapeHtml(m.text)}">${escapeHtml(m.text)}</a>`;
+                html = html.substring(0, m.index) + link + html.substring(m.index + m.text.length);
+            }
+            
+            // Pattern for phone numbers (various formats)
+            const phonePattern = /\b(\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})\b/g;
+            let phoneMatches = [];
+            while ((match = phonePattern.exec(html)) !== null) {
+                if (!isInsideLink(html, match.index)) {
+                    const cleanPhone = match[0].replace(/[\s\-\(\)\.]/g, '');
+                    const digits = cleanPhone.replace(/\D/g, '');
+                    if (digits.length >= 10) {
+                        phoneMatches.push({
+                            index: match.index,
+                            text: match[0],
+                            cleanPhone: cleanPhone
+                        });
+                    }
+                }
+            }
+            
+            // Replace phone numbers (from end to start)
+            for (let i = phoneMatches.length - 1; i >= 0; i--) {
+                const m = phoneMatches[i];
+                const link = `<a href="tel:${m.cleanPhone}">${escapeHtml(m.text)}</a>`;
+                html = html.substring(0, m.index) + link + html.substring(m.index + m.text.length);
+            }
+            
+            return html;
+        }
+
+        // Extract URLs from text and show previews
+        function extractAndShowLinkPreviews(text, messageDiv) {
+            // Remove existing previews for this message
+            const existingPreviews = messageDiv.querySelectorAll('.link-preview');
+            existingPreviews.forEach(preview => preview.remove());
+            
+            const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+            const urls = [];
+            let match;
+            
+            while ((match = urlPattern.exec(text)) !== null) {
+                let url = match[0];
+                if (url.toLowerCase().startsWith('www.')) {
+                    url = 'http://' + url;
+                }
+                urls.push(url);
+            }
+            
+            // Remove duplicates
+            const uniqueUrls = [...new Set(urls)];
+            
+            // Fetch previews for each URL
+            uniqueUrls.forEach(url => {
+                fetchLinkPreview(url, messageDiv);
+            });
+        }
+
+        // Fetch link preview metadata with timeout
+        function fetchWithTimeout(url, timeout = 5000) {
+            return Promise.race([
+                fetch(url),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Timeout')), timeout)
+                )
+            ]);
+        }
+
+        // Fetch link preview metadata
+        async function fetchLinkPreview(url, messageDiv) {
+            // Create preview container
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'link-preview';
+            previewDiv.setAttribute('data-url', url);
+            previewDiv.innerHTML = '<div class="link-preview-loading">Loading preview</div>';
+            
+            // Insert after message content
+            const contentDiv = messageDiv.querySelector('.message-content');
+            contentDiv.parentNode.insertBefore(previewDiv, contentDiv.nextSibling);
+            
+            // Show URL immediately as fallback
+            const showFallback = () => {
+                const domain = new URL(url).hostname.replace('www.', '');
+                previewDiv.innerHTML = `
+                    <div class="link-preview-content">
+                        <div class="link-preview-title">${escapeHtml(domain)}</div>
+                        <div class="link-preview-description">Click to visit this link</div>
+                        <div class="link-preview-url">${escapeHtml(url)}</div>
+                    </div>
+                `;
+                previewDiv.onclick = () => window.open(url, '_blank', 'noopener,noreferrer');
+            };
+
+            try {
+                // Try multiple proxy services
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                
+                const response = await fetchWithTimeout(proxyUrl, 4000);
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const data = await response.json();
+                const html = data.contents;
+                
+                if (!html) {
+                    throw new Error('No content received');
+                }
+                
+                // Parse HTML to extract metadata
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Extract Open Graph or meta tags
+                const title = doc.querySelector('meta[property="og:title"]')?.content ||
+                             doc.querySelector('meta[name="twitter:title"]')?.content ||
+                             doc.querySelector('title')?.textContent ||
+                             new URL(url).hostname.replace('www.', '');
+                
+                const description = doc.querySelector('meta[property="og:description"]')?.content ||
+                                  doc.querySelector('meta[name="twitter:description"]')?.content ||
+                                  doc.querySelector('meta[name="description"]')?.content ||
+                                  '';
+                
+                const image = doc.querySelector('meta[property="og:image"]')?.content ||
+                             doc.querySelector('meta[name="twitter:image"]')?.content ||
+                             '';
+                
+                // Update preview
+                let previewHTML = '';
+                if (image) {
+                    previewHTML += `<img src="${escapeHtml(image)}" class="link-preview-image" alt="${escapeHtml(title)}" onerror="this.parentElement.querySelector('.link-preview-image').style.display='none'">`;
+                }
+                previewHTML += `
+                    <div class="link-preview-content">
+                        <div class="link-preview-title">${escapeHtml(title)}</div>
+                        ${description ? `<div class="link-preview-description">${escapeHtml(description)}</div>` : ''}
+                        <div class="link-preview-url">${escapeHtml(url)}</div>
+                    </div>
+                `;
+                
+                previewDiv.innerHTML = previewHTML;
+                previewDiv.onclick = () => window.open(url, '_blank', 'noopener,noreferrer');
+                
+            } catch (error) {
+                // If preview fails, show fallback
+                showFallback();
+            }
+        }
+
+        // Check API connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/healthcheck`);
+                if (response.ok) {
+                    showStatus('API is ready!', 'success');
+                    setTimeout(() => showStatus('', ''), 2000);
+                }
+            } catch (error) {
+                showStatus('⚠️ Cannot connect to API. Make sure the server is running on http://localhost:8080', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+
