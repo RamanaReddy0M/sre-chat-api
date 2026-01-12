@@ -60,6 +60,7 @@ The application uses Server-Sent Events (SSE) for real-time message broadcasting
 - ✅ Postman collection included
 - ✅ Dockerized with multi-stage Dockerfile
 - ✅ Optimized Docker image size (~65MB)
+- ✅ CI/CD pipeline with GitHub Actions (self-hosted runner)
 
 ## Prerequisites
 
