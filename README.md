@@ -314,7 +314,7 @@ make docker-logs-api
 make docker-stop
 
 # Push to registry (set REGISTRY variable)
-REGISTRY=ghcr.io/username VERSION=1.0.0 make docker-push
+REGISTRY=your-dockerhub-username VERSION=1.0.0 make docker-push
 ```
 
 ## API Endpoints
