@@ -13,7 +13,7 @@ A modern web interface is included - no need for curl or Postman!
 1. **Start the API:**
 
    ```bash
-   make run-api-docker
+   make run-api-local
    ```
 
 2. **Open in Browser:**
@@ -63,11 +63,128 @@ The application uses Server-Sent Events (SSE) for real-time message broadcasting
 
 ## Prerequisites
 
-- Go 1.21 or higher
-- PostgreSQL 12 or higher (or Docker)
-- Make (optional, but recommended)
+### Required Tools
 
-## Quick Setup
+The following tools must be installed on your local machine:
+
+- **Docker** (version 20.10 or higher) - [Install Docker](https://docs.docker.com/get-docker/)
+- **Docker Compose** (version 2.0 or higher) - Usually included with Docker Desktop
+- **Make** - Usually pre-installed on Linux/macOS. For Windows, use [Chocolatey](https://chocolatey.org/) or [WSL](https://docs.microsoft.com/en-us/windows/wsl/)
+
+### Optional Tools (for local development without Docker)
+
+- Go 1.21 or higher
+- PostgreSQL 12 or higher
+
+## One-Click Local Development Setup
+
+This setup uses Docker Compose to run both the API and PostgreSQL database with minimal configuration.
+
+### Quick Start (Recommended)
+
+```bash
+# 1. Clone the repository
+git clone git@github.com:RamanaReddy0M/sre-chat-api.git
+cd sre-chat-api
+
+# 2. Start everything (DB + API)
+# This will automatically build the image if needed
+make run-api-compose
+```
+
+That's it! The API will be available at `http://localhost:8080`.
+
+**Note:** The `run-api-compose` target automatically builds the Docker image if it doesn't exist, so no separate build step is needed.
+
+### Make Targets and Execution Order
+
+The following Make targets are available for local development:
+
+#### 1. **`make start-db`** - Start Database Container
+   - Starts the PostgreSQL container
+   - Waits for PostgreSQL to be ready
+   - Skips if already running
+
+#### 2. **`make migrate-db`** - Check Database Migrations
+   - Ensures DB is running (calls `start-db`)
+   - Checks if migrations are already applied
+   - Note: Migrations run automatically when API starts (via `MIGRATION_ENABLED=true`)
+
+#### 3. **`make build-api-image`** - Build REST API Docker Image
+   - Builds the Docker image for the API
+   - Uses multi-stage Dockerfile for optimal size
+
+#### 4. **`make run-api-compose`** - Run REST API via Docker Compose (One-Click Setup)
+   - **Automatically:**
+     1. Starts the database container (if not running)
+     2. Checks and runs migrations (if needed)
+     3. Starts the API container
+   - **Includes checks:**
+     - Verifies DB is running before starting API
+     - Checks if migrations are already applied
+   - API available at: `http://localhost:8080`
+
+#### Additional Useful Targets
+
+- **`make stop-api`** - Stop all containers (API + DB)
+- **`make logs-api`** - View API logs (follow mode)
+- **`make logs-all`** - View all logs (API + DB)
+- **`make restart-api`** - Restart API container only
+- **`make check-db`** - Check if DB container is running
+- **`make check-migrations`** - Check if migrations are applied
+
+### Step-by-Step Manual Setup
+
+If you prefer to run steps individually:
+
+```bash
+# 1. Start the database
+make start-db
+
+# 2. Run migrations (optional - runs automatically on API start)
+make migrate-db
+
+# 3. Build the API image (optional - run-api-compose builds it automatically)
+make build-api-image
+
+# 4. Start the API
+docker compose up -d api
+
+# Or use the one-command approach (recommended):
+make run-api-compose
+```
+
+### Verify Setup
+
+```bash
+# Check if containers are running
+docker compose ps
+
+# Check API health
+curl http://localhost:8080/api/v1/healthcheck
+
+# View API logs
+make logs-api
+```
+
+### Troubleshooting
+
+**Database connection issues:**
+- Ensure PostgreSQL container is running: `make check-db`
+- Check logs: `docker compose logs postgres`
+
+**Migrations not applied:**
+- Check migration status: `make check-migrations`
+- Manually run migrations: `make migrate-db`
+
+**API not starting:**
+- Check logs: `make logs-api`
+- Verify DB is ready: `make check-db`
+- Restart everything: `make stop-api && make run-api-compose`
+
+## Local Development (Without Docker)
+
+If you prefer to run locally without Docker:
 
 ### 1. Clone and Install
 
@@ -79,7 +196,7 @@ make deps
 
 ### 2. Database Setup
 
-#### Option A: Docker Compose (Recommended)
+#### Option A: Docker Compose (PostgreSQL only)
 
 ```bash
 make docker-up
@@ -113,10 +230,6 @@ export MIGRATION_ENABLED=true
 ### 4. Run
 
 ```bash
-# Quick start (with Docker)
-make run-api-docker
-
-# Or manually
 make build
 make run
 ```
@@ -259,26 +372,11 @@ sre-chat-api/
 ```bash
 make build          # Build the API
 make run            # Run the API
-make run-api-docker # Start PostgreSQL and run API
+make run-api-local # Start PostgreSQL and run API locally
 make test           # Run tests
 make deps           # Install dependencies
 make clean          # Clean build artifacts
 ```
-
-## SRE Bootcamp Milestone 1 Checklist
-
-- ✅ Public GitHub Repository
-- ✅ README.md with setup instructions
-- ✅ Dependency management (`go.mod`)
-- ✅ Makefile for build/run
-- ✅ Database migrations
-- ✅ Environment variable configuration
-- ✅ Postman collection
-- ✅ API versioning (`/api/v1/`)
-- ✅ Proper HTTP verbs
-- ✅ Structured logging
-- ✅ Health check endpoint
-- ✅ Unit tests
 
 ## Troubleshooting
 
