@@ -13,7 +13,7 @@ A modern web interface is included - no need for curl or Postman!
 1. **Start the API:**
 
    ```bash
-   make run-api-docker
+   make run-api-local
    ```
 
 2. **Open in Browser:**
@@ -89,12 +89,12 @@ cd sre-chat-api
 
 # 2. Start everything (DB + API)
 # This will automatically build the image if needed
-make run-api
+make run-api-compose
 ```
 
 That's it! The API will be available at `http://localhost:8080`.
 
-**Note:** The `run-api` target automatically builds the Docker image if it doesn't exist, so no separate build step is needed.
+**Note:** The `run-api-compose` target automatically builds the Docker image if it doesn't exist, so no separate build step is needed.
 
 ### Make Targets and Execution Order
 
@@ -114,7 +114,7 @@ The following Make targets are available for local development:
    - Builds the Docker image for the API
    - Uses multi-stage Dockerfile for optimal size
 
-#### 4. **`make run-api`** - Run REST API Container (One-Click Setup)
+#### 4. **`make run-api-compose`** - Run REST API via Docker Compose (One-Click Setup)
    - **Automatically:**
      1. Starts the database container (if not running)
      2. Checks and runs migrations (if needed)
@@ -144,14 +144,14 @@ make start-db
 # 2. Run migrations (optional - runs automatically on API start)
 make migrate-db
 
-# 3. Build the API image (optional - run-api builds it automatically)
+# 3. Build the API image (optional - run-api-compose builds it automatically)
 make build-api-image
 
 # 4. Start the API
 docker compose up -d api
 
 # Or use the one-command approach (recommended):
-make run-api
+make run-api-compose
 ```
 
 ### Verify Setup
@@ -180,7 +180,7 @@ make logs-api
 **API not starting:**
 - Check logs: `make logs-api`
 - Verify DB is ready: `make check-db`
-- Restart everything: `make stop-api && make run-api`
+- Restart everything: `make stop-api && make run-api-compose`
 
 ## Local Development (Without Docker)
 
@@ -372,7 +372,7 @@ sre-chat-api/
 ```bash
 make build          # Build the API
 make run            # Run the API
-make run-api-docker # Start PostgreSQL and run API
+make run-api-local # Start PostgreSQL and run API locally
 make test           # Run tests
 make deps           # Install dependencies
 make clean          # Clean build artifacts
