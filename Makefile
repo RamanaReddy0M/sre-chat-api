@@ -1,4 +1,4 @@
-.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-local docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api-compose stop-api logs-api check-db check-migrations vagrant-up vagrant-down vagrant-reload vagrant-ssh vagrant-status vagrant-provision vagrant-deploy vagrant-logs
+.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-local docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api-compose stop-api logs-api check-db check-migrations vagrant-up vagrant-down vagrant-reload vagrant-ssh vagrant-status vagrant-provision vagrant-deploy vagrant-logs minikube-up minikube-down minikube-status minikube-nodes minikube-delete
 
 # Build REST API
 build:
@@ -288,6 +288,46 @@ vagrant-deploy:
 vagrant-logs:
 	@echo "Viewing logs from Vagrant box..."
 	@vagrant ssh -c "cd /vagrant && sudo docker compose logs -f"
+
+# ============================================================================
+# Milestone 6: Minikube 3-Node Production Kubernetes Cluster
+# ============================================================================
+# Node A (application): type=application
+# Node B (database): type=database
+# Node C (dependent_services): observability, vault, etc.
+MINIKUBE_PROFILE ?= sre-chat-api
+MINIKUBE_DRIVER ?= docker
+MINIKUBE_MEMORY ?= 4096
+MINIKUBE_CPUS ?= 2
+
+# Start 3-node Minikube cluster and apply node labels
+minikube-up:
+	@chmod +x scripts/minikube-cluster.sh
+	@MINIKUBE_PROFILE="$(MINIKUBE_PROFILE)" MINIKUBE_DRIVER="$(MINIKUBE_DRIVER)" \
+	 MINIKUBE_MEMORY="$(MINIKUBE_MEMORY)" MINIKUBE_CPUS="$(MINIKUBE_CPUS)" \
+	 ./scripts/minikube-cluster.sh
+	@echo ""
+	@echo "✓ Production Kubernetes cluster is ready (profile: $(MINIKUBE_PROFILE))"
+
+# Stop Minikube cluster (preserves cluster)
+minikube-down:
+	@echo "Stopping Minikube cluster..."
+	@minikube stop --profile="$(MINIKUBE_PROFILE)"
+	@echo "✓ Cluster stopped"
+
+# Show cluster status
+minikube-status:
+	@minikube status --profile="$(MINIKUBE_PROFILE)"
+
+# Show nodes and labels
+minikube-nodes:
+	@minikube --profile="$(MINIKUBE_PROFILE)" kubectl -- get nodes --show-labels
+
+# Delete Minikube cluster
+minikube-delete:
+	@echo "Deleting Minikube cluster (profile: $(MINIKUBE_PROFILE))..."
+	@minikube delete --profile="$(MINIKUBE_PROFILE)"
+	@echo "✓ Cluster deleted"
 
 # ============================================================================
 # Alias for backward compatibility

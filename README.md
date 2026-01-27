@@ -349,6 +349,68 @@ make test-coverage     # Run with coverage report
 
 Import `postman_collection.json` into Postman for API testing.
 
+## Self-Hosted Runner (GitHub Actions CI)
+
+The CI pipeline (`.github/workflows/ci.yml`) uses a **self-hosted runner**. To run workflows on your own machine:
+
+### 1. Add a self-hosted runner
+
+1. Open the repo on GitHub: **Settings → Actions → Runners**
+2. Click **New self-hosted runner**
+3. Pick **OS** and **architecture** (e.g. Linux x64, macOS ARM64)
+4. Copy the commands shown and run them on the machine that will run jobs
+
+### 2. Configure the runner
+
+On that machine:
+
+```bash
+# Create a folder and enter it
+mkdir -p ~/actions-runner && cd ~/actions-runner
+
+# Download (use the URL from GitHub’s “Add runner” page)
+curl -o actions-runner-linux-x64-2.311.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
+tar xzf actions-runner-linux-x64-2.311.0.tar.gz
+
+# Configure (token expires in ~1 hour; get it from the “Add runner” page)
+./config.sh --url https://github.com/YOUR_ORG/sre-chat-api --token YOUR_TOKEN
+```
+
+Replace `YOUR_ORG` with your GitHub org/user and use the token from the “Add runner” wizard. Use the correct runner package for your OS/arch from [actions/runner releases](https://github.com/actions/runner/releases).
+
+### 3. Start the runner
+
+**Interactive (foreground):**
+
+```bash
+cd ~/actions-runner
+./run.sh
+```
+
+**As a service (starts on boot):**
+
+```bash
+cd ~/actions-runner
+sudo ./svc.sh install    # install service
+sudo ./svc.sh start      # start now
+```
+
+Later:
+
+```bash
+sudo ./svc.sh stop       # stop
+sudo ./svc.sh uninstall  # remove service
+```
+
+### 4. Requirements on the runner machine
+
+- **Docker** – CI builds and pushes Docker images
+- **Go** – optional; the workflow uses `actions/setup-go`, but the runner should have enough CPU/memory for builds
+- **Network** – can reach `github.com` and your Docker registry
+- **Secrets** – in the repo **Settings → Secrets and variables → Actions**, set `DOCKER_USERNAME` and `DOCKER_PASSWORD` if the workflow pushes images
+
+Once the runner is **Idle** in **Settings → Actions → Runners**, pushes/PRs to the configured branches will run the CI on that machine.
+
 ## Project Structure
 
 ```text
@@ -571,6 +633,76 @@ After starting the Vagrant box:
 - Check containers: `sudo docker compose ps`
 - View API logs: `sudo docker compose logs api`
 - Check health: `curl http://localhost:8080/api/v1/healthcheck`
+
+## Milestone 6: Minikube Production Kubernetes Cluster
+
+A three-node Kubernetes cluster is provided via Minikube and treated as the **production cluster** for this project. Nodes are assigned roles via labels:
+
+| Node  | Role                 | Label                 | Use case                                                                 |
+|-------|----------------------|------------------------|--------------------------------------------------------------------------|
+| **A** | Application          | `type=application`     | Runs the SRE Chat API and app workloads                                  |
+| **B** | Database             | `type=database`        | Runs PostgreSQL and other data stores                                   |
+| **C** | Dependent services   | `type=dependent_services` | Observability stack, Vault for secrets, and other supporting services |
+
+### Prerequisites
+
+- **Minikube** – [Install Minikube](https://minikube.sigs.k8s.io/docs/start/)
+- **kubectl** – [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
+- A container runtime (e.g. **Docker**) – Minikube defaults to the docker driver
+
+### Quick start
+
+```bash
+# Create 3-node cluster and apply node labels
+make minikube-up
+
+# Inspect nodes and labels
+make minikube-nodes
+```
+
+### Make targets
+
+| Target            | Description                                      |
+|-------------------|--------------------------------------------------|
+| `make minikube-up`    | Start 3-node Minikube cluster and set node labels |
+| `make minikube-down`  | Stop the cluster (cluster definition is kept)     |
+| `make minikube-status`| Show cluster status                               |
+| `make minikube-nodes` | List nodes and their labels                       |
+| `make minikube-delete`| Remove the cluster and all data                   |
+
+### Node layout
+
+After `make minikube-up`, the cluster has:
+
+- **Control-plane node** (profile name, e.g. `sre-chat-api`): labeled `type=dependent_services` (Node C)
+- **Worker 1** (`sre-chat-api-m02`): labeled `type=application` (Node A)
+- **Worker 2** (`sre-chat-api-m03`): labeled `type=database` (Node B)
+
+To target workloads by role, use node selectors or taints/tolerations, for example:
+
+```yaml
+# Example: run app on Node A
+spec:
+  nodeSelector:
+    type: application
+```
+
+### Optional environment variables
+
+When starting the cluster (e.g. via `scripts/minikube-cluster.sh` or `make minikube-up`), you can override:
+
+| Variable           | Default      | Description              |
+|--------------------|-------------|--------------------------|
+| `MINIKUBE_PROFILE` | `sre-chat-api` | Minikube profile name  |
+| `MINIKUBE_DRIVER`  | `docker`    | Minikube driver          |
+| `MINIKUBE_MEMORY`  | `4096`      | Memory per node (MB)     |
+| `MINIKUBE_CPUS`    | `2`         | CPUs per node            |
+
+Example:
+
+```bash
+MINIKUBE_MEMORY=8192 MINIKUBE_CPUS=4 make minikube-up
+```
 
 ## License
 
