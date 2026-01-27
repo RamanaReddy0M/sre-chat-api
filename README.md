@@ -60,6 +60,7 @@ The application uses Server-Sent Events (SSE) for real-time message broadcasting
 - ✅ Postman collection included
 - ✅ Dockerized with multi-stage Dockerfile
 - ✅ Optimized Docker image size (~65MB)
+- ✅ CI/CD pipeline with GitHub Actions (self-hosted runner)
 
 ## Prerequisites
 
@@ -313,7 +314,7 @@ make docker-logs-api
 make docker-stop
 
 # Push to registry (set REGISTRY variable)
-REGISTRY=ghcr.io/username VERSION=1.0.0 make docker-push
+REGISTRY=your-dockerhub-username VERSION=1.0.0 make docker-push
 ```
 
 ## API Endpoints
