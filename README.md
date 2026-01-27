@@ -394,6 +394,184 @@ make clean          # Clean build artifacts
 
 - Create test database: `createdb -U postgres chat_test_db`
 
+## Production Deployment with Vagrant
+
+The project includes a Vagrant-based production environment setup with Nginx as a reverse proxy.
+
+### Prerequisites
+
+- **Vagrant** (2.2.0 or higher) - [Install Vagrant](https://www.vagrantup.com/downloads)
+- **Provider:** VirtualBox on Intel/AMD; on Apple Silicon: **Parallels Desktop Pro** or **VMware Fusion** (see below)
+
+### ⚠️ Apple Silicon (M1/M2/M3) Note
+
+**VirtualBox does not support Apple Silicon.** Use one of these providers:
+
+**Option A — VMware Fusion (free for personal use)**
+
+1. Install [VMware Fusion](https://www.vmware.com/products/fusion.html) (free personal license). On Apple Silicon you typically get **VMware Fusion Tech Preview**, which installs as `VMware Fusion Tech Preview.app`. The Vagrant VMware Utility expects `VMware Fusion.app`, so create a symlink: `sudo ln -sf "/Applications/VMware Fusion Tech Preview.app" "/Applications/VMware Fusion.app"`.
+2. Install the Vagrant VMware plugin:
+   ```bash
+   vagrant plugin install vagrant-vmware-desktop
+   ```
+3. Install the **Vagrant VMware Utility** (required by the plugin). Download the macOS installer from [Vagrant VMware Utility](https://www.vagrantup.com/downloads/vmware), run it, and follow the prompts. See [Vagrant VMware Utility docs](https://www.vagrantup.com/docs/providers/vmware/vagrant-vmware-utility) if needed.
+4. Start the VM with VMware:
+   ```bash
+   VAGRANT_PROVIDER=vmware_desktop make vagrant-up
+   ```
+   Or: `vagrant up --provider=vmware_desktop`
+
+**Option B — Parallels Desktop (Pro/Business edition required)**
+
+1. Install **Parallels Desktop** (Pro, Business, or Enterprise — the free edition does not include `prlctl`).
+2. Install the Vagrant Parallels plugin: `vagrant plugin install vagrant-parallels`
+3. Run `make vagrant-up` (Parallels is the default on ARM64).
+
+**Option C — Docker (no VM)**
+
+   ```bash
+   make run-api
+   ```
+
+### Quick Start
+
+```bash
+# Start the production environment
+make vagrant-up
+
+# Access the API
+# - Via Nginx (reverse proxy): http://localhost:8080
+# - Direct API access: http://localhost:8081
+```
+
+### Architecture
+
+```
+┌─────────────────────────────────────────┐
+│         Host Machine (Your PC)          │
+│                                         │
+│  http://localhost:8080 (Nginx Proxy)   │
+│  http://localhost:8081 (Direct API)    │
+└──────────────┬──────────────────────────┘
+               │
+               │ Port Forwarding
+               │
+┌──────────────▼──────────────────────────┐
+│      Vagrant VM (Production)            │
+│  ┌──────────────────────────────────┐  │
+│  │         Nginx (Port 80)          │  │
+│  │      Reverse Proxy               │  │
+│  └──────────┬───────────────────────┘  │
+│             │                          │
+│             │ proxy_pass               │
+│             │                          │
+│  ┌──────────▼───────────────────────┐  │
+│  │   API Container (Port 8080)      │  │
+│  │   Docker Compose                 │  │
+│  └──────────┬───────────────────────┘  │
+│             │                          │
+│  ┌──────────▼───────────────────────┐  │
+│  │  PostgreSQL (Port 5432)          │  │
+│  │  Docker Container                │  │
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+### Vagrant Commands
+
+```bash
+# Start production environment
+make vagrant-up
+
+# Stop production environment
+make vagrant-down
+
+# Reload (restart) Vagrant box
+make vagrant-reload
+
+# SSH into Vagrant box
+make vagrant-ssh
+
+# Check status
+make vagrant-status
+
+# Re-provision (re-run setup scripts)
+make vagrant-provision
+
+# Deploy updates (rebuild containers)
+make vagrant-deploy
+
+# View logs
+make vagrant-logs
+```
+
+### Nginx Configuration
+
+Nginx is configured as a reverse proxy with:
+
+- **Rate limiting**: 10 requests/second with burst of 20
+- **Health check endpoint**: `/api/v1/healthcheck` (no rate limiting)
+- **SSE support**: Proper configuration for Server-Sent Events
+- **Security headers**: X-Frame-Options, X-Content-Type-Options, etc.
+- **Static asset caching**: Cached for 1 hour
+- **CORS headers**: Enabled for API endpoints
+
+### Port Mapping
+
+- **8080** (host) → **80** (guest): Nginx reverse proxy
+- **8081** (host) → **8080** (guest): Direct API access
+- **5433** (host) → **5432** (guest): PostgreSQL (for debugging)
+
+### Accessing the Application
+
+After starting the Vagrant box:
+
+- **Web Client**: http://localhost:8080
+- **API Health Check**: http://localhost:8080/api/v1/healthcheck
+- **Direct API**: http://localhost:8081/api/v1/healthcheck
+
+### Troubleshooting
+
+**Vagrant box won't start:**
+- **Apple Silicon users**: Use Parallels (see "Apple Silicon Note" above). VirtualBox is not supported on ARM Macs.
+- **"Provider 'vmware_desktop' could not be found"**: Install the plugin first: `vagrant plugin install vagrant-vmware-desktop`, then run `VAGRANT_PROVIDER=vmware_desktop make vagrant-up`.
+- **"Vagrant VMware Utility" / "vagrant-utility.client.crt" error**: The VMware plugin needs the **Vagrant VMware Utility**. Install it from [vagrantup.com/downloads/vmware](https://www.vagrantup.com/downloads/vmware) (download the macOS package, run the installer, then retry).
+- **"Connection refused" to 127.0.0.1:9922 (Vagrant VMware Utility)**: The VMware Utility service is not running or is exiting. On macOS, start it with:
+  ```bash
+  sudo launchctl load -w /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist
+  ```
+  Or, on newer macOS: `sudo launchctl bootstrap system /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist`.  
+  If the plist path doesn’t exist, reinstall the [Vagrant VMware Utility](https://www.vagrantup.com/downloads/vmware).  
+  **If it still fails after a successful load:** (1) Ensure VMware Fusion is installed and has been opened at least once. (2) Check whether the job is running: `sudo launchctl list | grep vagrant`. (3) Check the utility log: `sudo cat "/Library/Application Support/vagrant-vmware-utility/service.log"` — it often explains why the process exits. (4) If the service keeps failing, use **Docker** (`make run-api`) or **Parallels Desktop Pro** instead.
+- **"Failed to locate VMware installation directory!"** in `service.log` or connection refused to 9922: The Vagrant VMware Utility looks for **VMware Fusion** at `/Applications/VMware Fusion.app`.  
+  **If you use VMware Fusion Tech Preview:** create a symlink, then fully restart the service:
+  ```bash
+  sudo ln -sf "/Applications/VMware Fusion Tech Preview.app" "/Applications/VMware Fusion.app"
+  sudo launchctl bootout system/com.vagrant.vagrant-vmware-utility
+  sudo launchctl bootstrap system /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist
+  ```
+  **If it still fails:** (1) Confirm Fusion Tech Preview is installed: `ls -la "/Applications/VMware Fusion Tech Preview.app"` — the symlink only works if that app exists. (2) Reinstall the [Vagrant VMware Utility](https://www.vagrantup.com/downloads/vmware) (others report this fixing detection). (3) If you don’t have Fusion or Tech Preview, install it from [VMware](https://www.vmware.com/products/fusion.html), or use **Docker** (`make run-api`) / **Parallels Desktop Pro** instead.
+- **"Load failed: 5: Input/output error"** when loading the Vagrant VMware Utility plist: This is a known issue on recent macOS. Try in order: (1) Confirm the plist exists: `ls /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist`. (2) Get more detail: `sudo launchctl bootstrap system /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist`. (3) If the job is already loaded, unload first: `sudo launchctl bootout system /Library/LaunchDaemons/com.vagrant.vagrant-vmware-utility.plist`, then run the installer again or run the `launchctl load` command. (4) Reinstall the [Vagrant VMware Utility](https://www.vagrantup.com/downloads/vmware). If it still fails, use **Docker for local dev** (`make run-api`) or **Parallels Desktop Pro** instead of VMware.
+- Check VirtualBox is installed and running (Intel Macs only)
+- Verify virtualization is enabled in BIOS (Intel Macs)
+- Check available disk space (VM needs ~10GB)
+- Ensure Vagrant version supports your VirtualBox version (upgrade if needed)
+
+**Services not starting:**
+- SSH into box: `make vagrant-ssh`
+- Check Docker: `sudo systemctl status docker`
+- Check logs: `make vagrant-logs`
+
+**Nginx not working:**
+- Check Nginx status: `sudo systemctl status nginx`
+- Test config: `sudo nginx -t`
+- View logs: `sudo tail -f /var/log/nginx/sre-chat-api-error.log`
+
+**API not responding:**
+- Check containers: `sudo docker compose ps`
+- View API logs: `sudo docker compose logs api`
+- Check health: `curl http://localhost:8080/api/v1/healthcheck`
+
 ## License
 
 This project is part of the SRE Bootcamp exercises.

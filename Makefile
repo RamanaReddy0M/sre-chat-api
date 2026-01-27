@@ -1,4 +1,4 @@
-.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-docker docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api stop-api logs-api check-db check-migrations
+.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-local docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api-compose stop-api logs-api check-db check-migrations vagrant-up vagrant-down vagrant-reload vagrant-ssh vagrant-status vagrant-provision vagrant-deploy vagrant-logs
 
 # Build REST API
 build:
@@ -228,8 +228,68 @@ restart-api:
 	@echo "✓ API container restarted"
 
 # ============================================================================
+# Vagrant Production Deployment
+# ============================================================================
+
+# Start Vagrant box (production environment)
+# On Apple Silicon: use VAGRANT_PROVIDER=vmware_desktop if you don't have Parallels Pro
+VAGRANT_PROVIDER ?=
+vagrant-up:
+	@echo "Starting Vagrant production environment..."
+	@if [ "$$(uname -m)" = "arm64" ] || [ "$$(uname -m)" = "aarch64" ]; then \
+		p="$${VAGRANT_PROVIDER:-parallels}"; \
+		echo "Using provider: $$p"; \
+		vagrant up --provider=$$p; \
+	else \
+		vagrant up; \
+	fi
+	@echo ""
+	@echo "✓ Production environment is ready!"
+	@echo "  API: http://localhost:8080"
+	@echo "  Nginx: http://localhost:8080 (reverse proxy)"
+	@echo "  Direct API: http://localhost:8081"
+
+# Stop Vagrant box
+vagrant-down:
+	@echo "Stopping Vagrant production environment..."
+	@vagrant halt
+	@echo "✓ Vagrant box stopped"
+
+# Reload Vagrant box (restart)
+vagrant-reload:
+	@echo "Reloading Vagrant production environment..."
+	@vagrant reload
+	@echo "✓ Vagrant box reloaded"
+
+# SSH into Vagrant box
+vagrant-ssh:
+	@echo "Connecting to Vagrant box..."
+	@vagrant ssh
+
+# Check Vagrant box status
+vagrant-status:
+	@echo "Vagrant box status:"
+	@vagrant status
+
+# Re-provision Vagrant box (re-run setup scripts)
+vagrant-provision:
+	@echo "Re-provisioning Vagrant box..."
+	@vagrant provision
+	@echo "✓ Provisioning completed"
+
+# Deploy to Vagrant (rebuild and restart services)
+vagrant-deploy:
+	@echo "Deploying to Vagrant production environment..."
+	@vagrant ssh -c "cd /vagrant && sudo docker compose down && sudo docker compose build --no-cache && sudo docker compose up -d"
+	@echo "✓ Deployment completed"
+
+# View logs in Vagrant
+vagrant-logs:
+	@echo "Viewing logs from Vagrant box..."
+	@vagrant ssh -c "cd /vagrant && sudo docker compose logs -f"
+
+# ============================================================================
 # Alias for backward compatibility
 # ============================================================================
 build-api: build
-run-api-local: run
 

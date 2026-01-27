@@ -35,3 +35,6 @@ go.work
 .DS_Store
 Thumbs.db
 
+# Vagrant
+.vagrant/
+*.box
