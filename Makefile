@@ -1,4 +1,4 @@
-.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-docker docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api stop-api logs-api check-db check-migrations
+.PHONY: build run test test-coverage migrate deps clean fmt lint docker-up docker-down docker-logs docker-ps docker-postgres run-api-local docker-build docker-run docker-tag docker-push start-db migrate-db build-api-image run-api-compose stop-api logs-api check-db check-migrations
 
 # Build REST API
 build:
@@ -58,15 +58,16 @@ docker-postgres:
 	@timeout 30 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 1; done' || true
 	@echo "PostgreSQL is ready!"
 
-# Run API with Docker Compose PostgreSQL
-run-api-docker: docker-postgres
-	@echo "Starting API with Docker Compose PostgreSQL..."
+# Run API locally (builds and runs against Docker-managed PostgreSQL)
+run-api-local: docker-postgres
+	@echo "Starting API locally with Docker-managed PostgreSQL..."
 	@MIGRATION_ENABLED=true make run
 
 # Docker image build and run
 # Version should be set via VERSION variable (e.g., VERSION=1.0.0 make docker-build)
 VERSION ?= 1.0.0
 IMAGE_NAME ?= sre-chat-api
+CONTAINER_NAME ?= sre-chat-api
 
 docker-build:
 	@echo "Building Docker image $(IMAGE_NAME):$(VERSION)..."
@@ -89,7 +90,7 @@ docker-run:
 
 docker-run-detached:
 	@echo "Running Docker container in detached mode..."
-	@docker run -d --name sre-chat-api \
+	@docker run -d --name $(CONTAINER_NAME) \
 		-p 8080:8080 \
 		-e SERVER_PORT=8080 \
 		-e DB_HOST=host.docker.internal \
@@ -100,15 +101,15 @@ docker-run-detached:
 		-e DB_SSLMODE=disable \
 		-e MIGRATION_ENABLED=true \
 		$(IMAGE_NAME):$(VERSION)
-	@echo "Container started. Use 'docker logs -f sre-chat-api' to view logs."
+	@echo "Container started. Use 'docker logs -f $(CONTAINER_NAME)' to view logs."
 
 docker-stop:
 	@echo "Stopping Docker container..."
-	@docker stop sre-chat-api || true
-	@docker rm sre-chat-api || true
+	@docker stop $(CONTAINER_NAME) || true
+	@docker rm $(CONTAINER_NAME) || true
 
 docker-logs-api:
-	@docker logs -f sre-chat-api
+	@docker logs -f $(CONTAINER_NAME)
 
 # Tag image with additional tags (for registry push)
 docker-tag:
@@ -187,9 +188,9 @@ build-api-image:
 	@echo "Building REST API Docker image..."
 	@VERSION=1.0.0 IMAGE_NAME=sre-chat-api make docker-build
 
-# Run REST API docker container (starts DB, runs migrations, then starts API)
-run-api: start-db migrate-db
-	@echo "Starting REST API container..."
+# Run REST API via Docker Compose (starts DB, runs migrations, then starts API)
+run-api-compose: start-db migrate-db
+	@echo "Starting REST API via Docker Compose..."
 	@echo "This will:"
 	@echo "  1. Ensure PostgreSQL is running"
 	@echo "  2. Ensure migrations are applied"
@@ -231,5 +232,4 @@ restart-api:
 # Alias for backward compatibility
 # ============================================================================
 build-api: build
-run-api-local: run
 
